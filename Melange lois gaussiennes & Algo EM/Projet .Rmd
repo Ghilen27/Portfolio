@@ -9,7 +9,6 @@ output:
   word_document:
     toc: yes
     toc_depth: '3'
-subtitle: \textit{Travail Encadré de Recherche}
 ---
 
 ```{r setup, include=FALSE}
