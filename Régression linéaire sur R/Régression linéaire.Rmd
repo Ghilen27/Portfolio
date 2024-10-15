@@ -1,5 +1,5 @@
 ---
-title: "TP1 Statistique et Modélisation"
+title: "Statistique et Modélisation"
 author: "Ghilen TAGNIT HAMMOU"
 output: 
   
