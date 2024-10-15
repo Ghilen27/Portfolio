@@ -1,0 +1,161 @@
+---
+title: "TP1 Statistique et Modélisation"
+author: "Ghilen TAGNIT HAMMOU"
+output: 
+  
+  html_document: default
+  pdf_document: 
+    toc: yes
+    number_sections: yes
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+``` 
+\newpage
+
+# Données
+## Création BMI
+```{r donnees, echo=FALSE}
+poumon <- read.table(file="poumon.txt", sep="\t", header= TRUE, dec=",")
+```
+\vspace{5mm} 
+
+Création de la variable BMI et sa description:
+```{r BMI}
+poumon$BMI <- poumon$POIDS / (poumon$TAILLE_EN_M)**2
+summary(poumon$BMI)
+```
+- On observe que l’Indice de masse corporelle varie entre 17.16 et 36.16 kg/$m^{2}$
+- Sa moyenne est de 24 kg/$m^{2}$
+- 50% des individus ont un IMC supérieur ou égale à 23.63 kg/$m^{2}$
+
+\vspace{5mm}
+
+# Régression linéaire simple
+## Lien entre la TLCO et l'âge
+
+\vspace{5mm} 
+
+```{r tlco et âge, echo=FALSE}
+plot(poumon$AGE, poumon$TLCO)
+```
+- On remarque plus on vieillit et plus la capacité de transfert pulmonaire décroit
+
+\vspace{5mm} 
+
+## Nuages de points entre TLCO et les variables Age, Taille, POIDS, BMI
+
+\vspace{5mm} 
+
+```{r tlco et autres varbiables, echo=FALSE}
+poumon2 <- poumon[, c("TLCO","AGE","TAILLE_EN_M","POIDS","BMI")]
+pairs(poumon2, pch = 3, col = "blue", main = "Nuages de points entre TLCO et les autres variables")   
+```
+- On remarque ici plus on a une grande taille et plus notre capacité de transfert pulmonaire croit 
+
+\vspace{5mm} 
+
+## Le modèle de régression de TLCO sur l’âge
+
+\vspace{5mm} 
+
+```{r tlco regression, echo=FALSE}
+modelTLCO <- lm(TLCO~AGE, data=poumon)
+summary(modelTLCO)
+```
+- $\hat{\beta_{0}}$ vaut 45.35
+- $\hat{\beta_{1}}$ vaut -0.30
+- p-valeur très petite <2e-16 donc on rejette $H_{0}$ et donc $\beta_{1}$ est significatif et différent de 0
+- $R^{2}$ vaut 40.63% et donc presque de la moitié de la variation observée dans le modèle calculé peut être expliquée par les points
+
+```{r tlco plot, echo=FALSE}
+plot(poumon$AGE, poumon$TLCO)
+abline(modelTLCO)
+```
+
+## Le sens de l’estimation de $\hat{Y_{i}}$ et de la prédiction de $Y_{i}$ sachant la valeur de la covariable
+
+\vspace{5mm}
+La valeur de la TLCO attendue pour un individu de
+40 ans avec l’intervalle de confiance à 95% et celui de l’intervalle de prévision:
+```{r age 40, echo=FALSE}
+pred.frame<- data.frame(AGE=40:40)
+pc<- predict(modelTLCO, interval="confidence",newdata=pred.frame)
+pc
+pp<- predict(modelTLCO, interval="prediction",newdata=pred.frame)
+pp
+
+```
+- Au risque de 5% la valeur de la TLCO pour un individu de 40 ans se trouve entre 32.32 et 34.01
+- Au risque de 5% la valeur de la TLCO pour un individu de 40 ans se trouve entre 19.70 et 46.64
+
+\vspace{5mm}
+
+
+```{r image, echo=FALSE, fig.height=2, fig.width=2, fig.align = 'center'}
+knitr::include_graphics("C:/Users/tagni/OneDrive/Bureau/pppc.png")
+
+```
+- Au risque 5% il y'a 11 individus qui sont en dehors de l'intervalle de prédiction
+
+\vspace{5mm}
+
+## le vecteur des prédictions correspondant à la première colonne de pp
+
+```{r vect, warning=FALSE}
+modelTLCO$coef
+prev<- modelTLCO$coef[1]+modelTLCO$coef[2]*pred.frame$AGE
+prev
+```
+- On retrouve bien la même valeur et on recupere le vecteur $\beta$
+
+##  le nuage de points des résidus en fonction de l’âge et la TLCO
+
+```{r residus, echo=FALSE}
+res <- modelTLCO$res
+plot(poumon$AGE, res)
+plot(poumon$TLCO, res)
+shapiro.test(res)
+hist(res, col = "pink")
+
+```
+- La statistique W = 0.99121 très proche de 1 qui veut dire que nos données sont proches d'une distribution normale.
+
+
+## Critères d’explication et de prédiction
+
+```{r q8, echo=FALSE}
+tr <- sample(1:nrow(poumon),225)
+train <- poumon[tr,]
+test <- poumon[-tr,]
+model<-lm(TLCO~AGE , data=train)
+summary(model)
+pc<- predict(model, interval="prediction",newdata=test)
+```
+
+## Variables liés à la TLCO
+- Le poids et la TLCO:
+
+```{r liée, echo=FALSE}
+modelTLCO <- lm(TLCO~POIDS, data=poumon) 
+summary(modelTLCO)
+plot(poumon$POIDS, poumon$TLCO)
+abline(modelTLCO)
+
+```
+
+
+## Création de la variable cBMI
+```{r cBMI}
+poumon$cBMI <- ifelse(poumon$BMI < 25, 'normal', ifelse(poumon$BMI < 30, 'surpoids', 'obese'))
+modelTLCO <- lm(TLCO~cBMI, data=poumon) 
+summary(modelTLCO)
+
+```
+
+- Le poids normal d'un individus est très significatif au modèle
+
+
+
+
+
