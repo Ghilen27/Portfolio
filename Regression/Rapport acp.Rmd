@@ -1,0 +1,182 @@
+---
+title: "Rapport ACP etat"
+author: "Ghilen TAGNIT HAMMOU"
+subtitle: "M1 Maths IMSD"
+date: "2024-05-08"
+output: 
+  pdf_document: 
+    toc: yes
+---
+
+```{r 1.0, echo=FALSE}
+donnees<-read.csv2("Etat.csv",header=T,sep=";",dec=",",na.strings="NA")
+row.names(donnees) <- as.character(donnees$Etat)
+donnees$Etat <- NULL
+```
+# Analyse et interprétation
+## ACP avec les variables actives
+```{r 1.1, echo=FALSE, warning=FALSE}
+library(FactoMineR)
+res.pca =PCA(donnees, scale.unit=TRUE, graph=T)
+```
+ __Les valeurs propres__
+```{r 1.2, echo=FALSE}
+vp <- res.pca$eig
+vp
+```
+### La somme des valeurs propres
+```{r 1.3, echo=FALSE}
+sum(res.pca$eig[,1])
+```
+- On remarque que c'est bien égal au nombre de colonnes. la nullité de la dernière valeur propre s'explique du fait que la Pop inf à 65 ans est liée à la Pop sup à 65 ans.
+
+## La qualité globale de représentation du nuage par le premier plan factoriel
+- Sur le premier plan factoriel on a 64.32% de l'information. 
+
+## Nombres d’axes principaux
+```{r 3.0, echo=FALSE}
+vp
+par(mfrow=(c(1,1)))
+pc <- c("green","green","green","green","red","red","red","red")
+barplot(vp[,1], col = pc)
+
+```
+- Avec la règle de Kaiser on peut se limiter à 3 dimensions compte tenu des 3 premières valeurs propres qui sont supérieures à 1. On obtient aussi plus de 87.67% de l'information avec les 4 premiers axes. Donc on choisit raisonnablement 4 dimensions.
+
+## La qualité de représentation des individus
+### La matrice $\Psi$ des coordonnées des individus
+```{r 4.0, echo=FALSE}
+ncp <- 4
+psi<-res.pca$ind$coord
+psi[,1:ncp]
+
+```
+### La qualité de représentation des individus __trié__ dans le sous-espace engendré par 4 composantes principales
+```{r 4.1, echo=FALSE}
+cos2<-res.pca$ind$cos2
+psi2<-psi*psi
+s<-apply(psi2[,], MARGIN=1,FUN=sum)
+sncp<-apply(psi2[,1:ncp], MARGIN=1,FUN=sum)
+qlt<-sncp/s
+sort(qlt, decreasing=T)
+```
+- Les 5 individus les mieux représentés sont Iowa, West Viriginia, Indiana, Ochio et Pennsylvania avec des valeurs respectives ( 0.9999883 ; 0.9992809 ; 0.9987422 ; 0.9985601 ; 0.9973437 ).
+
+- Les 5 individus les moins bien représentés sont Mississippi, Wyoming, Vermont, Arizona et Minnesota avec des valeurs respectives ( 0.6218791 ; 0.6277004 ; 0.6360112 ; 0.6839181 ; 0.7079686 ).
+
+- Ici on peut pas parler d'individus très mal représentés mais moins bien car la plus faible valeur vaut 0.6218791.
+
+## La qualité de représentation des individus __trié__ dans le premier plan factoriel
+```{r 5.0, echo=FALSE}
+cos2<-res.pca$ind$cos2
+psi2<-psi*psi
+s<-apply(psi2[,], MARGIN=1,FUN=sum)
+s2<-apply(psi2[,1:2], MARGIN=1,FUN=sum)
+qlt2<-s2/s
+sort(qlt2, decreasing=T)
+```
+- Les 5 individus les mieux représentés sont West Viriginia, Pennsylvania, Texas, Kentucky et Alaska avec des valeurs respectives ( 0.997048531 ; 0.977865341 ; 0.952358566 ; 0.947787613 ; 0.946726563 ).
+
+- Les 5 individus les moins bien représentés sont District of columbia, Minnesota, New Hampshire, Michigan et Indiana avec des valeurs respectives ( 0.008377232 ; 0.050085201 ; 0.075430084 ; 0.139221971 ; 0.167722643 ).
+
+## La qualité de représentation des individus graphique dans le premier plan factoriel
+```{r 6.0, echo=FALSE}
+plot.PCA(res.pca, axes =c(1,2), choix = "ind")
+```
+- On voit bien que l'Alaska et la Pennsylvanie sont bien représentées.\newline
+- On voit bien que District of columbia et Minnesota sont mal repésentées, elles sont prés du centre.
+
+## Les individus ayant la plus forte contribution à la formation du premier axe principal
+```{r 7.0, echo=FALSE}
+contrib<-res.pca$ind$contrib
+sort(contrib[,1], decreasing= T)
+```
+- On remarque que les individus Alaska, Utah et West Virignia ont une forte contribution à la formation du premier axe principal suivie de manière moins forte du Texas, California, et Pennsylvania.
+
+## La qualité de représentation des variables
+### La matrice $\Phi$ des coordonnées des variables
+```{r 8.0, echo=FALSE}
+ncp <- 4
+phi<-res.pca$var$coord[,1:ncp]
+phi
+```
+### Sur le premier axe
+```{r 8.1, echo=FALSE}
+cos2<-res.pca$var$cos2
+cos2
+```
+- Les variables Pop sup 65 ans, Pop inf 65 ans et Taux de mortalité sont bien reprensentées (entre 0.77 et 0.86).
+- La variable Taux de naissance est moyennement bien représentée (0.57).
+- Les variables Popoluation, Immigration interne, Americains migrants et Immigration internationale sont très mal représentéés (entre 0.04 et 0.20).
+
+### Dans le premier plan factoriel
+```{r 8.2, echo=FALSE}
+apply(cos2[,1:2],1,sum)
+```
+- Les variables Pop sup 65 ans, Pop inf 65 ans, Immigration internationale, Taux de mortalité,et Population sont bien reprensentées (entre 0.77 et 0.90).
+- La variable Taux de naissance est moyennement bien représentée (0.57).
+- Les variables Immigration interne et Americains migrants sont très mal représentéés (entre 0.06 et 0.38).
+
+### Dans le sous-espace à 4 dimensions
+```{r 8.3, echo=FALSE}
+ncp <- 4
+apply(cos2[,1:ncp],1,sum)
+```
+- La qualité de représentation est supérieure à 0.93 pour Immigration interne, Pop sup 65 ans, Pop inf 65 ans et Americains migrants.
+- La qualité de représentation est entre 0.81 et 0.86 pour Taux de mortalité, Population et Immigration internationale.
+- La qualité de représentation de Taux de naissance est à 0.68.
+
+## Interprétation des premiers plans factoriels
+### Plan (1,2)
+```{r 9.0, echo=FALSE, message=FALSE}
+plot.PCA(res.pca, axes=c(1,2), choix="var")
+
+```
+* La dim 1 apporte 45% de l'information.$\newline$
++ Elle est correlée positivement avec Taux de naissance et Pop inf à 65 ans.$\newline$
++ Elle est correlée négativement avec Taux de mortalité et Pop sup à 65 ans.
+$\newline$
+* La dim 2 apporte 19% de l'information.$\newline$
++ Elle est correlée positivement avec Immigration internationale et Population.
+
+### Plan (1,3)
+```{r 9.1, echo=FALSE, message=FALSE}
+plot.PCA(res.pca, axes=c(1,3), choix="var")
+
+```
+- La dim 3 apporte 14% de l'information.$\newline$
++ Elle est correlée positivement avec Immigration interne.
+
+### Plan (3,4)
+```{r 9.2, echo=FALSE, message=FALSE}
+plot.PCA(res.pca, axes=c(3,4), choix="var")
+
+```
+- La dim 4 apporte 10% de l'information.$\newline$
++ Elle est correlée positivement avec Americains migrants.
+
+## Les caractéristiques de certains pays suivant leur position dans le plan factoriel
+### Plan (1,2)
+```{r 10.0, echo=FALSE}
+plot.PCA(res.pca, axes =c(1,2))
+```
+- Les individus placés à droite ont un Taux de naissance elevé et une Pop inf à 65 ans (Alaska, California, Texas et Utah).$\newline$
+- Les individus placés à gauche ont un Taux de mortalité elevé et une Pop sup à 65 ans (West Viriginia, pennsylvania, Florida et South Dakota).$\newline$
+
+- Les individus placés en haut ont une forte immigration internaionale et Population (California, Florida, New York, Texas et New Jersey).$\newline$
+- Les individus placés en bas ont une faible immigration internaionale et Population (Alaska et Wyoming).
+
+### Plan (1,3)
+```{r 10.1, echo=FALSE}
+plot.PCA(res.pca, axes =c(1,3))
+```
+- Les individus placés en haut ont une forte immigration interne (Nevada, New Hampshire, Arizona et Florida).$\newline$
+- Les individus placés en bas ont une faible immigration interne (New York et North Dakota).
+
+### Plan (3,4)
+```{r 10.2, echo=FALSE}
+plot.PCA(res.pca, axes =c(3,4))
+```
+- Les individus placés en haut ont reçu une forte migration américaine (Utah).$\newline$
+- Les individus placés en bas ont reçu une faible migration américaine (Hawaii,Virginia, Florida et Alaska).
+
