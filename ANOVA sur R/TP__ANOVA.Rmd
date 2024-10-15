@@ -1,0 +1,242 @@
+---
+title: "TP ANOVA à 1 facteur"
+author: "Ghilen TAGNIT HAMMOU"
+output: 
+  pdf_document: 
+    toc: yes
+---
+```{r données, echo=FALSE, message=FALSE, warning=FALSE}
+rdt <- c(15,14,17,21,20,21,14,15,14,16,17,17,16,19,20,23,24,25,15,14,14,12,11,12,18,17,17,20,21,21,17,19,17,12,13,13)
+
+
+region <- as.factor(rep(rep(1:4,each=3),3))
+
+levels(region) <- paste("Region", 1:4)
+
+engrais <- as.factor(rep(1:3,each=12))
+levels(engrais) <- paste("engrais",1:3)
+
+epeautre <- data.frame(rdt=rdt , region=region, engrais =engrais)
+
+```
+# __Effet de l'engrais sur le rendement__
+## __La distribution des données pour chaque groupe d'engrais__
+
+```{r 2, echo=FALSE}
+plot(rdt~engrais, col = c("red", "green", "blue"))
+tapply(rdt,engrais,summary)
+
+```
+
+En moyenne l'engrais B et C fournissent un meilleur rendement.
+
+
+
+## __Le tableau de l’Anova__
+
+```{r 3, echo=FALSE}
+mon.aov.rdt_eng <- aov(rdt~engrais)
+summary(mon.aov.rdt_eng)
+```
+
+* Degrés de liberté de l'inter qui vaut bien 3-1 = 2
+* Degrés de liberté de l'intra qui vaut bien 36-3 = 33
+* La somme des carrés de l'inter vaut 0.9
+* La somme des carrés de l'intra vaut 450.1
+* Les carrés moyens de l'inter vaut bien 0.9 / 2 = 0.44 
+* Les carrés moyens de l'intra vaut bien 450.1 / 33 = 13.63 
+* La statistique de test vaut  F = 0.033 
+* Sur la table de fisher on lit $f^{(2,33)}_{(0.95)}$ = 3.27 qui est > F on rejette pas $H_0$.
+* On rejette pas $H_{0}$ car p-val plus grande que $\alpha$.
+
+* On remarque la présence de la P-Val par rapport au cours.
+* On remarque l'absence de la somme des carrés totale et son ddl.
+* On déduit que la somme des carrés totale = 0.9+450.1 = 451 et son ddl = 36-1 = 35  
+
+
+## __Les coefficients du modèle__ 
+
+```{r 4, echo=FALSE}
+mon.aov.rdt_eng$coefficients
+```
+
+* $\mu$ vaut 16.7500000  
+* $\alpha_2$ vaut 0.3333333 
+* $\alpha_3$ vaut 0.3333333 
+
+
+## __L’anova via un modèle linéaire__
+
+```{r 5,echo=FALSE}
+modele <- lm(rdt~engrais)
+anova(modele)
+```
+
+* On a bien les mêmes résultats.
+
+
+## __Lien entre les paramètres $\mu$ et $\alpha_k$__
+
+```{r 6.0, echo=FALSE}
+s <- summary(modele)
+s
+```
+
+* En moyenne l'engrais B et C fournissent un rendement de plus de 0.33 par rapport à l'engrais A (ils sont meilleurs).
+
+```{r 6.1, echo=FALSE}
+summary(lm(rdt~C(engrais, base=2)))
+```
+
+* En moyenne l'engrais A fournit un rendement de moins de 3.333e-01 par rapport à l'engrais B (il n'est pas meilleur).
+* En moyenne l'engrais C fournit un rendement de moins de 5.892e-16 par rapport à l'engrais B (il n'est pas meilleur).
+
+## __Test sur les résidus suivent une loi normale__
+```{r 7, echo=FALSE}
+par(mfrow=c(2,2))
+plot(modele)
+shapiro.test(s$residuals)
+```
+
+* La statistique W = 0.97108 très proche de 1 ainsi que la P-val > $\alpha$ qui veut dire que nos données sont proches d’une distribution normale. 
+
+
+## __Test sur l’hypothèse d’égalité des variances__
+
+```{r 8, echo=FALSE}
+bartlett.test(rdt~engrais)
+
+```
+
+* On rejette pas car p-val plus grande que $\alpha$, donc les $\epsilon_k,_i$ ont tous la même variance.
+
+## __Conclusion__
+* L'engrais n'a pas d'effet sur le rendement.
+
+
+
+
+
+
+
+# __Effet de la région sur le rendement__
+## __La distribution des données pour chaque groupe de region__
+
+```{r 2.1, echo=FALSE}
+plot(rdt~region, col = c("red", "green", "blue", "yellow"))
+tapply(rdt,region,summary)
+
+```
+
+* En moyenne la region 2 fournit un meilleur rendement.
+
+
+## __Le tableau de l’Anova__
+
+```{r 2.2, echo=FALSE}
+mon.aov.rdt_reg <- aov(rdt~region)
+summary(mon.aov.rdt_reg)
+```
+
+* Degrés de liberté de l'inter qui vaut bien 4-1 = 3 
+* Degrés de liberté de l'intra qui vaut bien 36-4 = 32 
+* La somme des carrés  de l'inter vaut 327.2 
+* La somme des carrés  de l'intra vaut 123.8 
+* Les carrés moyens de l'inter vaut bien 327.2 / 3 = 109.06 
+* Les carrés moyens de l'intra vaut bien 123.8 / 32 = 3.87 
+* La statistique de test vaut  F = 28.2 
+* Sur la table de fisher on lit $f^{(3,32)}_{(0.95)}$ = 2.90 qui est < F, on rejette $H_0$.
+* On rejette $H_{0}$ car p-val inférieur à $\alpha$.
+
+* On remarque la présence de la P-Val par rapport au cours.
+* On remarque l'absence de la somme des carrés totale et son ddl.
+* On déduit que la somme des carrés totale = 327.2+123.8 = 451 et son ddl = 36-1 = 35
+
+
+## __Les coefficients du modèle__
+
+```{r 2.4, echo=FALSE}
+mon.aov.rdt_reg$coefficients
+```
+
+* $\mu$ vaut 17.000000
+* $\alpha_2$ vaut 4.777778
+* $\alpha_3$ vaut -1.555556
+* $\alpha_4$ vaut -3.333333
+
+
+## __L’anova via un modèle linéaire__
+
+```{r 2.5,echo=FALSE}
+modele <- lm(rdt~region)
+anova(modele)
+```
+
+* On a bien les mêmes résultats.
+
+
+## __Lien entre les paramètres $\mu$ et $\alpha_k$__
+
+```{r 2.6.0, echo=FALSE}
+s <- summary(modele)
+s
+```
+
+* En moyenne la region 2 fournit un de rendement de plus de 4.77 par rapport à la region 1 (elle est meilleure).
+* En moyenne la region 3 fournit un de rendement de moins de 1.55 par rapport à la region 1 (elle n'est pas meilleure).
+* En moyenne la region 4 fournit un de rendement de moins de 3.33 par rapport à la region 1 (elle n'est pas meilleure).
+
+
+
+```{r 2.6.1, echo=FALSE}
+summary(lm(rdt~C(region, base=2)))
+```
+
+* En moyenne la region 1 fournit un de rendement de moins de 4.77 par rapport à la region 2 (elle n'est pas meilleure).
+* En moyenne la region 3 fournit un de rendement de moins de 6.33 par rapport à la region 2 (elle n'est pas meilleure).
+* En moyenne la region 4 fournit un de rendement de moins de 8.11 par rapport à la region 2 (elle n'est pas meilleure).
+
+
+## __Test sur les résidus suivent une loi normale__
+```{r 2.7, echo=FALSE}
+par(mfrow=c(2,2))
+plot(modele)
+shapiro.test(s$residuals)
+```
+
+* La p-val est inférieur à $\alpha$ veut dire que nos données ne suivent pas une distribution normale.
+
+
+## __Test sur l’hypothèse d’égalité des variances__
+
+```{r 2.8, echo=FALSE}
+bartlett.test(rdt~region)
+
+```
+
+* On rejette pas car p-val plus grande que $\alpha$, donc les $\epsilon_k,_i$ ont tous la même variance.
+
+
+## __Comparaison des moyennes 2 à 2__ 
+
+```{r 2.9, echo=FALSE}
+pairwise.t.test(rdt,region,p.adjust="bonf")
+
+```
+
+* On observe bien sur la ligne et colonne de la region 2 une P-val très petite donc très significative.
+
+
+## __Test non-paramétrique de Kruskall-Wallis__
+
+```{r 2.10, echo=FALSE}
+kruskal.test(rdt~region)
+```
+
+* On observe que la p-val est inférieur à $\alpha$ donc les données n'ont pas la même répartition dans chaque groupe de région.
+
+
+
+## __Conclusion__
+* La région a un effet sur le rendement.
+
