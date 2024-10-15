@@ -1,6 +1,6 @@
 ---
 title: "Modélisation statistique des données complexes"
-author: "Matthéo RAPENNE et Ghilen TAGNIT HAMMOU"
+author: "Ghilen TAGNIT HAMMOU"
 date: "2024-10-06"
 output: 
   pdf_document: 
