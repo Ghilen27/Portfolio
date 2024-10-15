@@ -1,0 +1,425 @@
+---
+title: "Modèle de mélange et estimation"
+author: "Matthéo RAPENNE & Ghilen TAGNIT HAMMOU"
+output:
+  pdf_document:
+    toc: yes
+    number_sections: yes
+    toc_depth: 3
+  word_document:
+    toc: yes
+    toc_depth: '3'
+subtitle: \textit{Travail Encadré de Recherche}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+``` 
+\newpage
+
+```{r image, echo=FALSE, out.width="80%", fig.align = 'center'}
+knitr::include_graphics("Exemple_melange_gaussien.png")
+```
+
+\vspace{5mm}
+
+**Résumé:** On se place dans le cas d’un modèle de mélange de deux variables gaussiennes : l’une de moyenne 0 et de variance $\sigma^2$ donnée (avec probabilité $1 - \theta$) et l’autre de moyenne $\mu$ positive et de même variance (avec probabilité $\theta$). On considère la modélisation de l’effet d’un traitement, qui a un effet nul sur une fraction $\theta$ de patients et un effet positif sur le restant de la population. On observe un échantillon i.i.d. de cette variable aléatoire et l’objectif est d’estimer la proportion $\theta$, la moyenne $\mu$, et la variance $\sigma^2$. Pou se faire, on utilise un algorithme de type Expectation-Maximization (abrégé EM).
+
+\vspace{5mm}
+
+**Mots-clés:** Modèle de mélange gaussien, algorithme EM
+
+\vspace{5mm}
+
+# Modèle de mélange
+
+\vspace{5mm}
+
+Par définition, un modèle de mélange est un modèle statistique utilisé pour estimer la distribution (ou fonction de densité) de variables aléatoires en les modélisant comme une somme de plusieurs distributions simples ou connues. Soit $\it X$ une variable aléatoire de fonction de densité $\it f$. On suppose que $\it f$ peut s'écrire comme la somme pondérée de fonctions de densité $\it f_k$, appelées composantes de $\it f$. \medskip
+
+Dans le cas où $\it X$ est une variable aléatoire discrète, on a:
+
+$$\displaystyle f(x,\,\phi) = \sum_{k = 1}^{N} \theta_k\,f_k(x,\,\phi_k) \qquad (1)$$
+où $\theta_k$ est la probabilité à priori de la composante $\it k$, 0 $\leqslant \theta_k \leqslant$ 1 et $\sum_{k = 1}^{N} \theta_k =$ 1. $\phi$ et $\phi_k$ désignent respectivement les paramètres de $\it f$ et de $\it f_k$. \medskip
+
+Dans le cas où $\it X$ est une variable aléatoire continue, on a:
+
+$$\displaystyle f(x,\,\phi) = \int  \, \theta_k\,f_k(x,\,\phi_k) \, \mathrm{d}x \qquad (2)$$
+Le problème d’estimation d’un modèle de mélange consiste à trouver une approximation appropriée de la distribution $\it f$ à partir d’un échantillon de $\it n$ réalisations de la variable aléatoire $\it X$. Autrement dit, on souhaite estimer $\phi$, c'est-à-dire les paramètres de la distribution de $\it X$ en la modélisant comme une somme de plusieurs distributions $\it f_k$. On cherche alors à déterminer les paramètres $\phi_k$ de chaque composante $\it f_k$. Dans la suite, nous nous intéressons seulement au cas gaussien.
+
+\vspace{5mm}
+
+# Modèle de mélange dans le cas gaussien
+
+\vspace{5mm}
+
+## Loi normale
+
+\vspace{5mm}
+
+La loi normale, ou distribution gaussienne, est la loi la plus connue parmi les distributions probabilistes. Elle est très utilisée pour modéliser la distribution de variables aléatoires continues. Dans le cas d’une variable aléatoire simple $\it X$, la fonction de densité
+de la loi gaussienne s'écrit :
+
+$$\displaystyle f_{\mu,\,\sigma^2}(x) = \frac{1}{\sigma\sqrt{2\pi}}\exp\left(-\frac{(x-\mu)^2}{2\sigma^2}\right) \qquad (3)$$
+où $\mu$ est la moyenne et $\sigma^2$ est la variance de $\it X$. \newline
+On dit que $\it X$ suit la loi normale de moyenne $\mu$ et de variance $\sigma^2$ et on note $\it X$ $\sim \mathcal{N}(\mu,\,\sigma^{2})$.
+
+\vspace{5mm}
+
+## Mélange gaussien
+
+\vspace{5mm}
+
+Le modèle de mélange gaussien est une combinaison linéaire de plusieurs composantes gaussiennes.
+Il est utilisé dans le cas où les données ne peuvent pas être modélisées par une simple gaussienne. Autrement dit, si les données peuvent naturellement être rassemblées en plusieurs groupes, il est préférable de les représenter par un modèle de mélange gaussien plutôt que par une simple distribution gaussienne. On considère alors que $\it f_k$ est la fonction de densité de la loi normale $\mathcal{N}(\mu_k,\,\sigma^{2}_k)$ dans les formules (1) et (2) ci-dessus. 
+
+\vspace{5mm}
+
+## Exemples d'application
+
+\vspace{5mm}
+
+Les mélanges de gaussiennes sont utilisés dans plusieurs domaines comme la reconnaissance de formes ou la recherche d’informations. C'est un outil probabiliste qui permet de modéliser et traiter les données multimédia comme par exemple les images, les sons et les vidéos. \medskip
+
+Dans le domaine de la recherche d’images, il existe de nombreuses manières de caractériser les ressemblances entre les images notamment par la texture, les couleurs et les formes. Une autre façon de représenter les images est d’appliquer une technique probabiliste qui se base sur les modèles de mélange gaussien. Il est possible de regrouper les pixels d'une image selon leurs intensités et leurs positions dans des groupes homogènes, réalisés par un algorithme d’estimation comme l'algorithme EM que nous décrirons par la suite. Ainsi, chaque image est représentée par un modèle de mélange gaussien. Cette méthode permet de calculer et de rechercher facilement la similarité de deux ou plusieurs images parmi une collection d’images.
+
+\vspace{5mm}
+
+# Motivations et problème
+
+\vspace{5mm}
+
+Nous nous intéressons à l'essai d'un nouveau traitement par rapport à un témoin. Il s'agit de développer un nouveau médicament pour concurrencer un médicament connu sur le marché. Les essais cliniques sont utilisés pour effectuer des tests tout en garantissant la sécurité des participants. Un essai clinique est une étude scientifique réalisée sur des êtres humains dont l'objectif est d'évaluer la non-toxicité, la tolérance et l’efficacité d’un traitement dans notre cas. Une méthode scientifique rigoureuse assure la fiabilité des essais cliniques. Les résultats sont ensuite publiés dans des revues médicales et présentés dans des conférences. \medskip 
+
+La recherche fondamentale consiste à synthétiser la molécule d'intérêt. Cette nouvelle molécule est testée sur des animaux en laboratoire. Elle est ensuite testée sur des volontaires sains, puis sur des volontaires malades. La période de test constitue la recherche clinique qui se déroule en quatre phases:
+
+* La phase I évalue la tolérance et l'absence d'effets secondaires chez des volontaires sains.
+* La phase II consiste à déterminer la dose optimale du médicament et à déterminer ses éventuels effets secondaires.
+* La phase III compare le traitement à un témoin, soit un placebo, soit un traitement de référence. Cette étape a pour but de confirmer la supériorité ou non de la nouvelle molécule sur le témoin.
+* La phase IV cherche à confirmer le bénéfice du nouveau médicament dans la population générale.
+
+\medskip
+
+Les méthodes traditionnelles d'évaluation d'un traitement par rapport à un témoin supposent que l'effet du traitement doit être représenté par un changement de la distribution du témoin. Dans la situation d'un décalage pur, tous les individus traités ont des réponses qui proviennent de la distribution décalée. \medskip
+
+D'un point de vue statistique, il convient de déterminer l'ampleur de l'effet du traitement afin de formuler les hypothèses de test appropriées. Un modèle utilisé pour représenter une différence entre le groupe témoin et le groupe de traitement est le modèle "de déplacement de lieu" (location-shift en anglais). Le groupe témoin a une certaine densité $\it f$ avec moyenne $\mu$ et variance $\sigma^2$. Le groupe avec traitement a alors pour densité $\it g$ tel que $\it g$($\it x$) = $\it f$($\it x - \delta$) pour tout réel $\it x$. Le paramètre $\delta$ déplace donc la moyenne $\mu$ sans modifier la variance $\sigma^2$. 
+
+\vspace{2mm}
+
+```{r image1, echo=FALSE, out.width="90%", fig.align = 'center'}
+knitr::include_graphics("Location_Shift.png")
+```
+
+\vspace{2mm}
+
+L'image ci-dessus illustre l'effet "location-shift" dans le cas où $\it f$ est la fonction de densité de la loi $\mathcal{N}(\mu,\,\sigma^{2})$. La fonction $\it g$ est alors la densité de la loi $\mathcal{N}(\mu + \delta,\,\sigma^{2})$. \medskip
+
+Un traitement n'a pas le même effet sur tous les individus, ce qui est représenté par la variance d'une distribution. La possibilité qu'un traitement n'ait pas d'effet significatif sur un individu n'est pas représentée dans le modèle "de déplacement de lieu". Dans ce cas, les individus "non-répondants" sont des individus qui ont reçu le traitement mais qui ne présente aucun effet significatif. Si un individu ne répond pas au traitement, on considère alors qu'il n'a pas reçu le traitement. Ainsi, leurs réponses proviennent de la même distribution que les réponses du groupe témoin. On peut se demander si la distribution du traitement est une combinaison de "répondants" et de "non-répondants". La proportion de "non-répondants" est considérée comme inconnue et la distribution du traitement sera représentée par un mélange de la distribution du groupe témoin et d'un effet "location-shift" appliqué à la distribution du groupe témoin. 
+
+\vspace{5mm}
+
+## Modélisation paramétrique
+
+\vspace{5mm}
+
+Soit $\it Z$ $\sim \mathcal{B}er(\theta)$ avec $\theta \in$ (0, 1). Soient $\it X_{0}$ $\sim \mathcal{N}(0,\,\sigma^{2})$ et $\it X_{\mu}$ $\sim \mathcal{N}(\mu,\,\sigma^{2})$ où $\mu \geq$ 0 et $\sigma^{2}$ > 0. \medskip
+
+On définit $\it X$ :$\,$= $\it Z \, X_{\mu}$ + (1$\,-\,Z$)$\,$$\it X_{0}$ tel que $\it X$ = $\it X_{\mu}$ avec probabilité $\theta$ et $\it X$ = $\it X_{0}$ avec probabilité 1$\,-\,$$\theta$. \medskip
+
+La loi du couple ($\it X,\,Z$) est donnée par:
+
+* $Z \sim \mathcal{B}er(\theta)$
+* Conditionnelement à l'événement $\it Z$ = 0, $X \sim \mathcal{N}(0,\,\sigma^{2})$
+* Conditionnelement à l'événement $\it Z$ = 1, $X \sim \mathcal{N}(\mu,\,\sigma^{2})$ 
+
+\medskip
+On a 
+$$\displaystyle \mathcal{L}(Z) = (1 - \theta)\,\delta_{0} \, + \, \theta\,\delta_{1}\,,\quad \mathcal{L}(X|Z = 0) = \mathcal{N}(0,\,\sigma^2) \quad et \quad \mathcal{L}(X|Z = 1) = \mathcal{N}(\mu,\,\sigma^2)$$
+
+L'objectif est d'estimer les paramètres $\theta$, $\mu$ et $\sigma^{2}$ inconnus. \newline
+Pour se faire, on sppose qu'il existe $\phi$ $\in$ $\Theta = {\{(1-\theta,\,0,\,\sigma^2)\,;\, (\theta,\,\mu,\,\sigma^2)\}}$ tel que les $\it n$ mesures $x_1$,$\,$,$x_2$,$\,$...,$\,$$x_n$ sont des réalisations d'un $\it n$-échantillon $X_1$,$\,$$X_2$,$\,$...,$\,$$X_n$ de loi de densité 
+$$\displaystyle f(x;\,\phi) = \theta\,f_{\mu,\,\sigma^2}(x)+(1-\,\theta)\,f_{0,\,\sigma^2}(x) = \frac{\theta}{\sigma\sqrt{2\pi}}\exp\left(-\frac{(x-\mu)^2}{2\sigma^2}\right)  + \frac{(1-\theta)}{\sigma\sqrt{2\pi}}\exp\left(-\frac{x^2}{2\sigma^2}\right)$$
+où $f_{\mu,\,\sigma^2}$ et $f_{0,\,\sigma^2}$ sont définies comme dans (3). C'est la distribution d'un mélange de deux lois gaussiennes. \medskip
+
+**Remarque:** Par la suite, on notera $f_\mu$ et $f_0$ au lieu de $f_{\mu\,\sigma^2}$ et $f_{0,\,\sigma^2}$ car la variance $\sigma^2$ est identique.
+
+\vspace{5mm}
+
+## Lien entre le problème de traitement et la modélisation mathématique
+
+\vspace{5mm}
+
+Nous considérons le groupe de $\it n$ individus (ou population) ayant reçus le traitement. Ce groupe est divisé en deux sous-groupes (ou sous-populations):
+
+* les individus "répondants" dont le traitement a un effet significatif
+* les individus "non-répondants" dont le traitement n'a pas effet significatif
+
+$\theta$ est la proportion d'individus "non-répondants" et 1 $-\,\theta$ est la proportion d'individus "répondants". \newline
+Par hypothèse, les "non-répondants" ont la même distribution que le groupe témoin, c'est-à-dire, de loi $\mathcal{N}(\mu,\,\sigma^2)$. Les "répondants" suivent la loi $\mathcal{N}(0,\,\sigma^2)$. \newline
+La loi de la population avec traitement apparaît alors comme le mélange de deux lois gaussiennes dont les coefficients de mélange sont les proportions de chaque sous-population. \medskip
+
+On ne connaît pas les proportions relatives de chaque sous-population, ni les paramètres caractéristiques des lois de probabilité que suivent les "répondants" et les "non-répondants". On souhaite dont estimer les quantités inconnues $\theta$, $\mu$ et $\sigma^2$. \medskip
+
+**Remarque:** Nous nous plaçons dans le cadre d'un mélange de composantes gaussiennes. Nous avons aussi fait le choix que les individus "répondants" suivent une loi normale d'espérance nulle.
+
+\vspace{5mm}
+
+# Notations
+
+\vspace{5mm}
+
+Voici les notations utilisées par la suite:
+
+* $\it f$($\it x;\,\phi$) désigne la densité au point $\it x$ de la loi de $\it X$ par rapport à la mesure de Lebesgue $\it d\lambda$ sur $\mathbb{R}$
+* $\it f$($\it x\,|\,Z;\,\phi$) désigne de la densité au point $\it x$ de la loi de $\it X$ sachant $\it Z$ par rapport à la mesure de Lebesgue $\it d\lambda$ sur $\mathbb{R}$
+* $\it g$($\it z;\,\phi$) désigne la densité au point $\it z$ de la loi de Z par rapport à la mesure de comptage $\it dN$ sur $\mathbb{N}$
+* $\it g$($\it z\,|\,X;\,\phi$) désigne de la densité au point $\it z$ de la loi de $\it Z$ sachant $\it X$ par rapport à la mesure de comptage $\it dN$ sur $\mathbb{N}$
+* $\it h$($\it x,\,z;\,\phi$) désigne la densité au point ($\it x,\,z$) de la loi de ($\it X,\,Z$) par rapport à la mesure produit $\it d\lambda \otimes dN$ sur $\mathbb{R} \times \mathbb{N}$
+* $\mathcal{X}$ désigne le vecteur ($X_1,\,X_2,...,X_n$) et $\mathcal{Z}$ désigne le vecteur ($Z_1,\,Z_2,...,\,Z_n$)
+
+\vspace{5mm}
+
+# Première approche
+
+\vspace{5mm}
+
+On suppose qu'on observe à la fois $\it X$ (population) et $\it Z$ (proportion d'une sous-population). On estime alors les paramètres inconnus $\theta$, $\mu$ et $\sigma^2$ par la méthode du maximum de vraisemblance. \newline
+La densité du couple ($X,\,Z$) par rapport à la mesure produit $\it d\lambda \otimes dN$ est 
+$$\displaystyle h(x,\,z;\,\phi) = \alpha(z)\,f_{m(z)}(x)\textbf{1}_{\{0,\,1\}}(z)$$
+
+La log-vraisemblance du modèle complet, c'est-à-dire le logarithme de la densité de la loi de l'échantillon ($X_1,\,Z_1,\,X_2,\,Z_2,\,...,\,X_n,\,Z_n$) où ($X_i,\,Z_i$) a même loi que ($X,\,Z$), s'écrit:
+$$\displaystyle L(\mathcal{X},\,\mathcal{Z},\,\phi) = \ln\,\prod_{i=1}^n h(X_i,\,Z_i;\,\phi) = \sum_{i=1}^n \left(\,\ln\,\alpha(Z_i)\,+\,\ln\,f_{m(Z_i)}(X_i)\right)$$
+$$\displaystyle = \sum_{i=1}^n \left( \ln\,\alpha(Z_i)\,+\,\ln\left(\frac{1}{\sigma\,\sqrt{2\pi}}\right)\,-\,\frac{(X_i\,-\,m(Z_i)^2)}{2\,\sigma^2}\right)$$
+$$\displaystyle = -\,n\,\ln(\sigma\,\sqrt{2\pi})\,+\,\sum_{i=1}^n\left(\ln\,\alpha(Z_i)\,-\,\frac{(X_i\,-\,m(Z_i))^2}{2\,\sigma^2}\right)$$
+
+Pour j = 0 ou 1, on note $A_j$ = $\{i = 1,\,2,\,...,\,n\,|\,Z_i = j\}$ et $C_j$ = card($A_j$).
+La log-vraisemblance du modèle se réécrit alors:
+$$\displaystyle L(\mathcal{X},\,\mathcal{Z};\,\phi) = C_0\,\ln(1\,-\,\theta)\,+\,C_1\,\ln\theta\,+\,\sum_{i\,\in\,A_0} \ln\,f_0(X_i)\,+\,\sum_{i\,\in\,A_1} \ln\,f_\mu(X_i)$$
+$$\displaystyle = C_0\,\ln(1\,-\,\theta)\,+\,C_1\,\ln\theta\,-n\,\ln(\sigma\,\sqrt{2\,\pi})\,-\,\sum_{i\,\in\,A_0} \frac{X_i^2}{2\,\sigma^2}\,-\,\sum_{i\,\in\,A_1} \frac{(X_i-\mu)^2}{2\,\sigma^2} \qquad (4)$$
+
+**Proposition:** La log-vraisemblance (ou vraisemblance) du modèle est maximale lorsque:
+$$\displaystyle \theta = \frac{C_1}{n},\,\quad \mu = \frac{\sum_{i\,\in\,A_1} X_i}{C_1} \quad et \quad \sigma^2 = \frac{\sum_{i\,\in\,A_0} X_i^2\,+\,\sum_{i\,\in\,A_1} (X_i\,-\,\mu)^2}{n}$$
+
+**Preuve:** On démontre les trois formules ci-dessus à partir de (4). On cherche $\theta$, $\mu$ et $\sigma^2$ tels que: \medskip
+
+$\displaystyle *\quad \frac{\partial L}{\partial \theta}(\mathcal{X},\,\mathcal{Z};\,\phi) = \frac{-\,C_0}{1\,-\,\theta}\,+\,\frac{C_1}{\theta} = \frac{-\,\theta\,C_0\,+\,(1\,-\,\theta)\,C_1}{(1\,-\,\theta)\,\theta} = \frac{-\,\theta\,(C_0\,+\,C_1)\,+\,C_1}{(1\,-\,\theta)\,\theta}$ \medskip
+
+$\displaystyle \frac{\partial L}{\partial \theta}(\mathcal{X},\,\mathcal{Z};\,\phi) = 0 \quad \Leftrightarrow \quad -\,\theta\,(C_0\,+\,C_1)\,+\,C_1 = 0 \quad \Leftrightarrow \quad \theta = \frac{C_1}{C_0\,+\,C_1} = \frac{C_1}{n}$ \medskip
+
+$\displaystyle *\quad \frac{\partial L}{\partial \mu}(\mathcal{X},\,\mathcal{Z};\,\phi) = \sum_{i\,\in\,A_1} \frac{X_i\,-\,\mu}{\sigma^2}$ \medskip
+
+$\displaystyle \frac{\partial L}{\partial \mu}(\mathcal{X},\,\mathcal{Z};\,\phi) = 0 \quad \Leftrightarrow \quad \sum_{i\,\in\,A_1} X_i = \sum_{i\,\in\,A_1} \mu \quad \Leftrightarrow \quad \mu = \frac{\sum_{i\,\in\,A_1} X_i}{C_1}$ \medskip
+
+$\displaystyle *\quad \frac{\partial L}{\partial \sigma^2}(\mathcal{X},\,\mathcal{Z};\,\phi) = \frac{\partial L}{\partial \psi}(\mathcal{X},\,\mathcal{Z};\,\phi) = \sum_{i\,\in\,A_0} \frac{X_i^2}{2\,\psi^2}\,+\,\sum_{i\,\in\,A_1} \frac{(X_i\,-\,\mu)^2}{2\,\psi^2}\,-\,\frac{n}{2\,\psi}$ \medskip
+
+$\displaystyle \frac{\partial L}{\partial \psi}(\mathcal{X},\,\mathcal{Z};\,\phi) = 0 \quad \Leftrightarrow \quad \psi = \frac{\sum_{i\,\in\,A_0} X_i^2\,+\,\sum_{i\,\in\,A_1} (X_i\,-\,\mu)^2}{n} \quad \Leftrightarrow \quad \sigma^2 = \frac{\sum_{i\,\in\,A_0} X_i^2\,+\,\sum_{i\,\in\,A_1} (X_i\,-\,\mu)^2}{n}$ \medskip
+
+On admet que ($\theta,\,\mu,\,\sigma^2$) maximise la log-vraisemblance $L(\mathcal{X},\,\mathcal{Z};\,\phi)$. 
+\begin{flushright}
+$\Box$
+\end{flushright}
+\medskip
+
+Malheureusement, dans la pratique, on n'observe que $\mathcal{X}$ (ensemble des individus qui ont pris le traitement). Il ne faut donc pas raisonner sur la log-vraisemblance du modèle complet mais uniquement sur la log-vraisemblance de l'échantillon ($X_1,\,X_2,\,...,\,X_n$), appelée log-vraisemblance des observations et qui s'écrit:
+$$\displaystyle L(\mathcal{X};\,\phi) = \ln\,\prod_{i=1}^n f(X_i;\,\phi) = \sum_{i=1}^n \ln(\theta\,f_{\mu}(X_i)\,+\,(1\,-\,\theta)\,f_0(X_i)) \qquad (5)$$
+
+Trouver ($\theta,\,\mu,\,\sigma^2$) qui maximise $L(\mathcal{X};\,\phi)$ n'est à priori pas simple.
+
+\vspace{5mm}
+
+# Solution au problème posé
+
+\vspace{5mm}
+
+Comme dit précédemment, on ne dispose pas de la log-vraisemblance complète car on n'observe pas $\mathcal{Z}$ (proportion de "répondants" et de "non-répondants"). Nous allons conditionner selon les observations, c'est-à-dire définir la log-vraisemblance conditionnelle des observations par:
+$$L_{c}(\mathcal{X};\,\phi,\,\phi_k) := \mathbb{E}[L(\mathcal{X},\,\mathcal{Z};\,\phi)|\, \mathcal{X};\,\phi_k] = \sum_{i = 1}^{n} \left( \int g(z\,|\,X=X_i;\,\phi_k) \ln\,h(X_i,\,z;\,\phi)\,dz \right)$$
+
+C'est l’espérance de la log-vraisemblance du modèle complet conditionnellement aux observations sous la loi de paramètre $\phi_k$ $\in$ $\Theta$. Nous pouvons maintenant présenter l'algorithme itératif EM qui nous permet d'estimer les paramètres inconnus $\theta$, $\mu$ et $\sigma^2$ à partir de $L_c(\mathcal{X};\,\phi,\,\phi_k)$. \medskip
+
+L'algorithme d'espérance-maximisation (abrégé par EM) consiste à itérer les deux étapes suivantes:
+
+* étape E (Expectation): on calcule $L_{c}(\mathcal{X};\,\phi,\,\phi_k)$ en tenant compte des dernières variables observées $\mathcal{X}$ et de $\phi_k$
+* étape M (Maximization): on estime le maximum de vraisemblance des paramètres $\phi_{k\,+\,1}$ en maximisant la fonction $\phi$ $\mapsto$ $L_{c}(\mathcal{X};\,\phi,\,\phi_k)$ trouvée à l'étape E
+
+On utilise à chaque fois les paramètres trouvés à l'étape M comme point de départ pour une nouvelle étape E. \newline
+Nous allons répondre à deux questions qui se posent.
+
+\vspace{5mm}
+
+## Comment l'algorithme EM fonctionne ?
+
+\vspace{5mm}
+
+La connaissance de la loi de $\it Z$ sachant que $\it X$ = $\it x$ est nécessaire pour calculer $L_c(\mathcal{X};\,\phi,\,\phi_k)$. \medskip
+
+**Proposition:** La densité de la loi de $\it Z$ sachant que $\it X$ = $\it x$ par rapport à la mesure
+de comptage sur $\mathbb{N}$ est donnée par :
+$$g(z\,|\,X = x;\,\phi) = \frac{h(x,\,z;\,\phi)}{f(x;\,\phi)} = \frac{\alpha(z)\,f_{m(z)}(x)}{\theta\,f_{\mu}(x)\,+\,(1\,-\,\theta)\,f_{0}(x)}\,\textbf{1}_{\{0,\,1\}}(z) \qquad (6)$$
+\medskip
+
+Voici la forme "détaillée" de la log-vraisemblance conditionnelle des observations:
+$$\displaystyle L_{c}(X;\,\phi,\,\phi_k) =  \sum_{i = 1}^{n} \left(\, g(0\,|\,X=X_i;\,\phi_k) \ln\, h(X_i,\,0;\,\phi)\,+\,g(1\,|\,X=X_i;\,\phi_k) \ln\,h(X_i,\,1;\,\phi)\,\right)$$
+$$\displaystyle = \sum_{i = 1}^{n} \left(\,g(0\,|\,X=X_i;\,\phi_k) \ln \left( \frac{(1-\theta)}{\sigma\sqrt{2\pi}}\exp\left(-\frac{X_i^2}{2\sigma^2}\right)\right)\,+\,g(1\,|\,X=X_i;\,\phi_k) \ln \left(\frac{\theta}{\sigma\sqrt{2\pi}}\exp\left(-\frac{(X_i-\mu)^2}{2\sigma^2}\right)\,\right)\right)$$
+$$\displaystyle = \sum_{i = 1}^{n} \left(\,g(0\,|\,X=X_i;\,\phi_k) \left(\ln \left( \frac{(1-\theta)}{\sigma\sqrt{2\pi}}\right)-\frac{X_i^2}{2\sigma^2}\right)\,+\,g(1\,|\,X=X_i;\,\phi_k) \left(\ln \left(\frac{\theta}{\sigma\sqrt{2\pi}}\right)-\frac{(X_i-\mu)^2}{2\sigma^2}\right)\,\right)$$
+$$\displaystyle = \sum_{i = 1}^{n} \left(\,g(0\,|\,X=X_i;\,\phi_k) \left(\,\ln(1-\theta)-\ln(\sigma\sqrt{2\pi})\,\right)\,\right) \,-\, \sum_{i = 1}^{n} \left(\,g(0\,|\,X=X_i;\,\phi_k)\,\frac{X_i^2}{2\sigma^2}\,\right)$$
+$$\displaystyle +\,\sum_{i = 1}^{n} \left(\,g(1\,|\,X=X_i;\,\phi_k) \left(\,\ln(\theta)-\ln(\sigma\sqrt{2\pi})\,\right)\,\right) \,-\, \sum_{i = 1}^{n} \left(\,g(1\,|\,X=X_i;\,\phi_k)\,\frac{(X_i-\mu)^2}{2\sigma^2}\,\right)$$
+$$\displaystyle = -\,n\ln(\sigma\sqrt{2\pi}) \,+\, \sum_{i = 1}^{n}\,g(0\,|\,X=X_i;\,\phi_k)\ln(1-\theta) \,+\, \sum_{i = 1}^{n}\,g(1\,|\,X=X_i;\,\phi_k)\ln(\theta)$$
+$$\displaystyle -\, \frac{1}{2\sigma^2} \sum_{i = 1}^{n}\left(\,g(0\,|\,X=X_i;\,\phi_k)\,X_i^2 \,+\, \,g(1\,|\,X=X_i;\,\phi_k)\,(X_i-\mu)^2\right) \qquad (7)$$
+\medskip
+
+**Proposition:** La fonction $\phi$ $\mapsto$ $L_c\,(X;\,\phi,\,\phi_k)$ admet un unique maximum et l'étape M de l'algorithme consiste à choisir $\phi_{k\,+\,1}$ comme ci-dessous:
+$$\displaystyle * \quad \theta = \frac{1}{n}\sum_{i = 1}^{n}\,g(1\,|\,X=X_i;\,\phi_k)$$
+$$\displaystyle * \quad \mu = \frac{\sum_{i=1}^{n}\,X_i\,g(1\,|\,X=X_i;\,\phi_k)}{\sum_{i=1}^{n}\,g(1\,|\,X=X_i;\,\phi_k)}$$
+$$\displaystyle * \quad \sigma^2 = \frac{1}{n}\left(\, \sum_{i = 1}^{n} g(0\,|\,X=X_i;\,\phi_k)\,X_i^2 \,+\, \,\sum_{i = 1}^{n} g(1\,|\,X=X_i;\,\phi_k)\,(X_i-\mu)^2\,\right)$$
+\medskip
+
+**Preuve:** On détermine $\theta$, $\mu$ et $\sigma^2$ qui annule des dérivées partielles de (7): \medskip
+
+$\displaystyle * \quad \frac{\partial L_c}{\partial \theta}(\mathcal{X};\,\phi,\,\phi_k) = -\,\frac{1}{1-\theta}\sum_{i = 1}^{n}\,g(0\,|\,X=X_i;\,\phi_k)\,+\,\frac{1}{\theta}\sum_{i = 1}^{n}\,g(1\,|\,X=X_i;\,\phi_k)$ \medskip
+
+$\displaystyle = \frac{1}{\theta(1-\theta)}\left(\,-\,\theta\,\sum_{i = 1}^{n}\,g(0\,|\,X=X_i;\,\phi_k)\,+\,(1\,-\,\theta)\,\sum_{i = 1}^{n}\,g(1\,|\,X=X_i;\,\phi_k)\right)$ \medskip
+
+$\displaystyle = \frac{1}{\theta(1-\theta)}\left(\, \sum_{i = 1}^{n}\,g(1\,|\,X=X_i;\,\phi_k)-n\,\theta\,\right)$ \medskip
+
+$\displaystyle \frac{\partial L_c}{\partial \theta}(\mathcal{X};\,\phi,\,\phi_k) = 0 \quad \Leftrightarrow \quad \theta = \frac{1}{n}\sum_{i = 1}^{n}\,g(1\,|\,X=X_i;\,\phi_k)$ \medskip
+
+$\displaystyle * \quad \frac{\partial L_c}{\partial \mu}(\mathcal{X};\,\phi,\,\phi_k) = \frac{1}{\sigma^2}\,\sum_{i = 1}^{n}\,g(1\,|\,X=X_i;\,\phi_k)(X_i\,-\,\mu)$ \medskip
+
+$\displaystyle \frac{\partial L_c}{\partial \mu}\,(\mathcal{X};\,\phi,\,\phi_k) = 0 \quad \Leftrightarrow \quad \sum_{i = 1}^{n}\,X_i\,g(1\,|\,X=X_i;\,\phi_k) = \mu\,\sum_{i = 1}^{n}\,g(1\,|\,X=X_i;\,\phi_k)$ \medskip
+
+$\displaystyle \Leftrightarrow \quad \mu= \frac{\sum_{i=1}^{n}\,X_i\, g(1\,|\,X=X_i;\,\phi_k)}{\sum_{i=1}^{n}\,g(1\,|\,X=X_i;\,\phi_k)}$ \medskip
+
+$\displaystyle * \quad \frac{\partial L_c}{\partial \sigma^2}(\mathcal{X};\,\phi,\,\phi_k) = \frac{\partial L_c}{\partial \psi}(\mathcal{X};\,\phi,\,\phi_k) = -\,\frac{n}{2\,\psi}\,+\,\frac{1}{2\,\psi^2}\,\left(\sum_{i = 1}^{n} g(0\,|\,X=X_i;\,\phi_k)\,X_i^2 \,+\, \,\sum_{i = 1}^{n} g(1\,|\,X=X_i;\,\phi_k)\,(X_i-\mu)^2\right)$ \medskip
+
+$\displaystyle \frac{\partial L_c}{\partial \psi}\,(\mathcal{X};\,\phi,\,\phi_k) = 0 \quad \Leftrightarrow \quad \frac{n}{\psi} = \frac{1}{\psi^2}\,\left(\sum_{i = 1}^{n} g(0\,|\,X=X_i;\,\phi_k)\,X_i^2 \,+\, \,\sum_{i = 1}^{n} g(1\,|\,X=X_i;\,\phi_k)\,(X_i-\mu)^2\right)$ \medskip
+
+$\displaystyle \Leftrightarrow \quad \psi = \frac{1}{n}\left(\, \sum_{i = 1}^{n} g(0\,|\,X=X_i;\,\phi_k)\,X_i^2 \,+\, \,\sum_{i = 1}^{n} g(1\,|\,X=X_i;\,\phi_k)\,(X_i-\mu)^2\,\right)$ \medskip
+
+$\displaystyle \Leftrightarrow \quad \sigma^2 = \frac{1}{n}\left(\, \sum_{i = 1}^{n} g(0\,|\,X=X_i;\,\phi_k)\,X_i^2 \,+\, \,\sum_{i = 1}^{n} g(1\,|\,X=X_i;\,\phi_k)\,(X_i-\mu)^2\,\right)$ \medskip
+
+On admet que ($\theta,\,\mu,\,\sigma^2$) maximise $L_c\,(\mathcal{X};\,\phi,\,\phi_k)$.
+\begin{flushright}
+$\Box$
+\end{flushright}
+
+\vspace{5mm}
+
+## Pourquoi l’algorithme EM fonctionne ?
+
+\vspace{5mm}
+
+Le résultat suivant montre que la log-vraisemblance des observations est croissante le long de l’algorithme EM. La suite $(\phi_k)_{k\,\geq\,0}$ converge vers un maximum local ou un point-selle de $L(\mathcal{X};\,\phi)$ définie en (5). \medskip
+
+**Proposition:** La suite $(\phi_k)_{k\,\geq\,0}$ construite par l'algorithme EM vérifie l'inégalité:
+$$\displaystyle L(\mathcal{X};\,\phi_{k\,+\,1}) \geq L(\mathcal{X};\,\phi_k) \qquad (8)$$ 
+où $L(\mathcal{X};\,\phi) = \sum_{i=1}^n \ln(\theta\,f_{\mu}\,(X_i)\,+\,(1\,-\,\theta)\,f_0\,(X_i))$ \medskip
+
+**Preuve:** Posons $Q(\phi,\,\phi_k)$ := $L_c(\mathcal{X};\,\phi,\,\phi_k)$. Puisque $h(x,\,z;\,\phi)$ = $f(x;\,\phi)\,g(z\,|\,X = x;\,\phi)$ d'après (6), la fonction $Q$ s'écrit alors:
+$\displaystyle Q(\phi,\,\phi_k) = \mathbb{E}[L(\mathcal{X},\,\mathcal{Z};\,\phi)|\, \mathcal{X};\,\phi_k] = \sum_{i = 1}^{n} \left( \int g(z\,|\,X=X_i;\,\phi_k) \ln\,h(X_i,\,z;\,\phi)\,dz \right)$ \medskip 
+
+$\displaystyle = \sum_{i = 1}^{n} \left( \int g(z\,|\,X=X_i;\,\phi_k) (\ln\,f(X_i;\,\phi)\,+\,\ln\,g(z\,|\,X=X_i;\,\phi))\,dz \right)$ \medskip
+
+$\displaystyle =\mathbb{E}[L(\mathcal{X};\,\phi)\,|\,\mathcal{X};\,\phi_k]\,+\, \mathbb{E}[L(\mathcal{Z}\,|\,\mathcal{X};\,\phi)\,|\,\mathcal{X};\,\phi_k] = L(\mathcal{X};\,\phi)\,+\,H(\phi,\,\phi_k)$ \medskip
+
+où $L(\mathcal{Z}\,|\,\mathcal{X};\,\phi) := \ln\,g\,(\mathcal{Z}\,|\,\mathcal{X};\,\phi)$ et $H(\phi,\,\phi_k) := \mathbb{E}[L(\mathcal{Z}\,|\,\mathcal{X};\,\phi)\,|\,\mathcal{X};\,\phi_k]$ \medskip
+
+Lors de l'étape M, la fonction $\phi\,\mapsto Q(\phi,\,\phi_k)$ est maximisée donc en particulier $Q(\phi_{k\,+\,1},\,\phi_k) \geq Q(\phi_k,\,\phi_k)$. \newline
+On en déduit que:
+$$L(\mathcal{X};\,\phi_{k\,+\,1})\,+\,H(\phi_{k\,+\,1},\,\phi_k) \geq L(\mathcal{X};\,\phi_k)\,+\,H(\phi_k,\,\phi_k) \qquad (9)$$
+
+Il reste à montrer que $H(\phi_{k\,+\,1},\,\phi_k) \leq H(\phi_k,\,\phi_k)$. Ceci est une conséquence de l'inégalité de Jensen: \medskip
+
+$\displaystyle H(\phi_{k\,+\,1},\,\phi_k)\,-\,H(\phi_k,\,\phi_k) = \mathbb{E}[L(\mathcal{Z}\,|\,\mathcal{X};\,\phi_{k\,+\,1})\,|\,\mathcal{X};\,\phi_k]\,-\,\mathbb{E}[L(\mathcal{Z}\,|\,\mathcal{X};\,\phi_k)\,|\,\mathcal{X};\,\phi_k]$ \medskip
+
+$\displaystyle = \mathbb{E}[\,\ln\,g(\mathcal{Z}\,|\,\mathcal{X};\,\phi_{k\,+\,1})\,|\,\mathcal{X};\,\phi_k]\,-\,\mathbb{E}[\,\ln\,g(\mathcal{Z}\,|\,\mathcal{X};\,\phi_k)\,|\,\mathcal{X};\,\phi_k]$ 
+$\displaystyle = \mathbb{E}[\,\ln\,g(\mathcal{Z}\,|\,\mathcal{X};\,\phi_{k\,+\,1})\,-\,\ln\,g(\mathcal{Z}\,|\,\mathcal{X};\,\phi_k)\,|\,\mathcal{X};\,\phi_k]$ \medskip
+
+$\displaystyle = \mathbb{E}\left[\,\left.\ln\,\left(\frac{g(\mathcal{Z}\,|\,\mathcal{X};\,\phi_{k\,+\,1})}{g(\mathcal{Z}\,|\,\mathcal{X};\,\phi_k)}\right)\,\right|\,\mathcal{X};\,\phi_k\right] \leq \ln\left(\,\mathbb{E}\left[\,\left.\frac{g(\mathcal{Z}\,|\,\mathcal{X};\,\phi_{k\,+\,1})}{g(\mathcal{Z}\,|\,\mathcal{X};\,\phi_k)}\,\right|\,\mathcal{X};\,\phi_k\right]\,\right)$ car ln est concave. \medskip
+
+De plus, on a
+$$\displaystyle \mathbb{E}\left[\,\left.\frac{g(\mathcal{Z}\,|\,\mathcal{X};\,\phi_{k\,+\,1})}{g(\mathcal{Z}\,|\,\mathcal{X};\,\phi_k)}\,\right|\,\mathcal{X};\,\phi_k\right] = \int \frac{g(\mathcal{Z}|\,\mathcal{X};\,\phi_{k\,+\,1})}{g(\mathcal{Z}|\,\mathcal{X};\,\phi_k)}\,g(\mathcal{Z}|\,\mathcal{X};\,\phi_k)\,d\mathcal{Z} = 1$$
+
+Ainsi $H(\phi_{k\,+\,1},\,\phi_k) \leq h(\phi_k,\,\phi_k)$ et donc (9) implique (8), c'est-à-dire $L(\mathcal{X};\,\phi_{k\,+\,1}) \geq L(\mathcal{X};\,\phi_k)$.
+\begin{flushright}
+$\Box$
+\end{flushright} \medskip
+
+**Remarques:** 1) Contrairement au cas où on observe à la fois $\mathcal{X}$ et $\mathcal{Z}$, il peut exister des points critiques qui "piègent" l’algorithme EM, sensible au point de départ $\phi_{\,0}$ choisi. \newline
+2) Il n'existe pas de règle générale qui détermine le nombre d'itérations néssaires pour approcher un maximum local. \newline
+3) Dans des cas plus compliqués, définir une matrice permet une meilleure lisibilité des calculs.
+
+\vspace{5mm}
+
+# Programmation en R
+
+\vspace{5mm}
+
+```{r EM}
+X = matrix(nrow = 100, ncol = 1) # mélange de deux gaussiennes
+
+for(i in 1:10^4){
+  # Simulation loi de Bernoulli par méthode de l'inversion
+  U = runif(1, 0, 1)
+  if (U < 0.8){
+    Z = 0
+  }
+  else{ # U >= 0.8
+    Z = 1
+  }
+  # Simulation de X
+  if(Z == 0){
+    X[i] = rnorm(1, 0, 3)
+  }
+  else{ # Z == 1
+    X[i] = rnorm(1, 27, 3)
+  }
+}
+
+# Algorithme EM
+
+theta = 2/5
+mu = 35
+sigma = 11
+N_inter = 10^4 # nombre d'itérations 
+
+for(i in 1:N_inter){
+  # Calcul des vraisemblances
+  vrais0 = (1 - theta)*dnorm(X, mean = 0, sd = sigma)
+  vrais1 = theta*dnorm(X, mean = mu, sd = sigma)
+  vrais01 = vrais0 / (vrais0 + vrais1)
+  vrais11 = vrais1 / (vrais0 + vrais1)
+  # Mise à jour des paramètres
+  theta = mean(vrais11)
+  mu = sum(X*vrais11)/sum(vrais11)
+  sigma = sqrt(mean(X^2*vrais01 + (X - mu)^2*vrais11)) # écart-type et non variance 
+}
+
+# Résultats
+
+theta
+mu
+sigma
+```
+\medskip
+
+Dans notre exemple, les valeurs des paramètres à retrouver sont $\theta$ = 0.2, $\mu$ = 27 et $\sigma$ = 3. Attention, $\it dnorm$ prend en paramètre l'écart-type $\sigma$ et non la variance $\sigma^2$. \newline
+Les trois valeurs affichées sont des estimations de nos paramètres. On constate que l'algorithme EM renvoie une bonne approximation de $\theta$, $\mu$ et $\sigma$ (ou $\sigma^2$).
+
+\vspace{5mm}
+
+# Pour allez plus loin ...
+
+\vspace{5mm}
+
+Deux types d'améliorations de l’algorithme EM ont été proposées pour accéler la convergence vers un maximum local: une qui concerne l'étape Expectation et une autre concernant l’étape Maximization. L'algorithme EM généralisé ne maximise plus l’espérance à chaque étape mais effectue uniquement un accroissement de celle-ci. Dans ce cas, il est possible d'appliquer l’algorithme EM même en l’absence de solution analytique. Les solutions alternatives au calcul de l’espérance consistent à introduire une part de stochasticité (le fait de dépendre du hasard) lors de l'estimation des paramètres. Par exemple, l'algorithme l’EM stochastique (SEM) remplace le calcul de l’espérance par une approximation numérique de celle-ci en simulant des données manquantes. Le Monte-Carlo EM (MCEM) remplace le calcul de l'espérance en approximant cette dernière par une méthode de Monte-Carlo (procédé aléatoire).
+
+\vspace{5mm}
+
+# Références
+
+\vspace{5mm}
+
+[1] Friel, D.C. & Jeske, D.R., 2023. Wilcoxon rank-sum tests to detect onesided mixture alternatives in group sequential clinical trials. Statistical Methods in Medical Research, 32(9), pp.1-3 and 9-11 \newline
+[2] Un document sur l’algorithme EM, 2008, Université Rennes 1 – Epreuve de modélisation - Agrégation Externe de Mathématiques \newline
+[3] Thèse de Ali El Attar, 2012, Estimation robuste des modèles de mélange sur des données distribuées, Université de Nantes, pp.16-20 \newline
+[4] Thèse de Emmanuel Monfrini, 2002, Identifiabilité et Méthode des Moments dans les mélanges généralisés de distributions du système de Pearson, Université Paris 6
