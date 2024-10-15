@@ -1,6 +1,6 @@
 ---
 title: "Rapport de projet"
-author: "Matthéo RAPENNE & Ghilen TAGNIT HAMMOU"
+author: "Ghilen TAGNIT HAMMOU"
 output:
   pdf_document:
     toc: yes
