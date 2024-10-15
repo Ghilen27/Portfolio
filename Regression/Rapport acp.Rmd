@@ -1,7 +1,6 @@
 ---
-title: "Rapport ACP etat"
+title: "Rapport ACP"
 author: "Ghilen TAGNIT HAMMOU"
-subtitle: "M1 Maths IMSD"
 date: "2024-05-08"
 output: 
   pdf_document: 
