@@ -2,7 +2,7 @@ Réalisation d’un Dashboard sur un fichier excel.csv [ Agences, Apport, Demand
 par la banque crédit breton. S’appuyant sur diverses User Stories on mettra en place différentes visualisations. Et transformation de données grâce à
 Power Query Editor et au langage DAX.
 
-**Réalisation des rapports suivantes**
+**Réalisation des rapports suivantes:**
 - Histogramme sur la somme des montant d’opération par année et accord, un graphique en courbes sur le montant moyen des opérations accordée par la banque
 filtré par un timeline sur les dates de demande, et un tableau des montants d’opérations par date de demande filtré sur un absence d’accord. 
 - Carte sur le nombre de numéro client par ville et localisation, un histogramme du nombre de numéro de prêt et un graphique de ruban du nombre de numéro 
