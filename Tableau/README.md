@@ -1,7 +1,4 @@
-Réalisation d’un Dashboard sur deux fichiers abonnements.csv ( Identifiant, date début abonnement, type d’abonnement, tarif mensuel de l’abonnement en euro, âge)
-et evenement.csv ( Id evenement, date et heure evenement, dernière donnée, id station avec son nom, latitude, longitude, capacité totale, nombre de places libres,
-type vélo, type evenement arrivée ou départ, fréquence départ et arrivée dernière 15 minutes, tarif trajet en euro, durée trajet, identifiant personne abonnée,
-taux remplissage de la station).
+Réalisation d’un Dashboard à partir des fichiers abonnements.csv et evenement.csv 
 
 **Réalisation des feuilles de calculs suivantes:**
 - Projection chiffre d'affaires par type d’abonnement.
