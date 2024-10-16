@@ -1,3 +1,5 @@
+https://app.powerbi.com/groups/me/reports/50ab2ba1-6f78-4071-80d7-65c63ec31ff2?ctid=158716cf-46b9-48ca-8c49-c7bb67e575f3&pbi_source=linkShare
+
 Réalisation d’un Dashboard sur un fichier excel.csv [ Agences, Apport, Demande de prêt, Situation familial, Situation Pro et leurs modalités] transmis
 par la banque crédit breton. S’appuyant sur diverses User Stories on mettra en place différentes visualisations. Et transformation de données grâce à
 Power Query Editor et au langage DAX.
@@ -17,4 +19,3 @@ combiner des tables en une seule et restriction de certaines données aux utilis
 - Création d’une nouvelle donnée ( Score emprunteur ) à partir des données ( Situation familiale ) par le langage DAX et une mesure rapide.
 - Plongée sur Power BI Service pour la gestion et création de rapports, tableaux de bords et jeux de données et la collaboration et le partage
 de ces derniers.
- lien: https://app.powerbi.com/groups/me/reports/50ab2ba1-6f78-4071-80d7-65c63ec31ff2?ctid=158716cf-46b9-48ca-8c49-c7bb67e575f3&pbi_source=linkShare
