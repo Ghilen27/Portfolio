@@ -1,3 +1,3 @@
-**Analyse en Composantes Principales (ACP)**
+**Analyse en Composantes Principales (ACP):**
 
 Ce projet porte sur l'analyse en composantes principales (ACP) appliquée à des données démographiques des états américains. L'ACP permet de réduire la dimensionnalité des données tout en conservant l'essentiel de l'information. Les valeurs propres et la variance expliquée ont guidé le choix des axes principaux, avec 64.32% de l'information capturée par les deux premiers axes. Les résultats mettent en évidence la qualité de représentation des individus et des variables dans l'espace factoriel, avec des états comme Iowa et West Virginia bien représentés, tandis que d'autres, comme Mississippi et Wyoming, le sont moins. La visualisation des plans factoriels permet d'interpréter les corrélations entre variables démographiques telles que la population, le taux de natalité et l'immigration.
